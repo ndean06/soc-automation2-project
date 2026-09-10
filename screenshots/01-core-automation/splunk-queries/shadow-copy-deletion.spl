@@ -1,0 +1,11 @@
+index=* (EventCode=1 OR EventID=1)
+    (Image="*\\vssadmin.exe" OR process_name="vssadmin.exe")
+    (CommandLine="*delete*shadows*" OR process_command_line="*delete*shadows*")
+| eval host_name=coalesce(host, Computer),
+       user_name=coalesce(User, user),
+       process_path=coalesce(Image, process_path, process_name),
+       command=coalesce(CommandLine, process_command_line)
+| table _time host_name user_name process_path command ParentImage ParentCommandLine ProcessGuid
+| sort + _time
+
+/* Adapt index, sourcetype, and field names to the lab data model before use. */

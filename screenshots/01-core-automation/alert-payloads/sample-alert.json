@@ -1,0 +1,13 @@
+{
+  "alert_id": "example-shadow-copy-001",
+  "alert_name": "SOC - Shadow Copy Deletion",
+  "severity": "high",
+  "event_time_utc": "2026-09-08T00:00:00Z",
+  "host": "WIN10-ENDPOINT",
+  "user": "lab-user",
+  "process": "C:\\Windows\\System32\\vssadmin.exe",
+  "command_line": "vssadmin.exe Delete Shadows /All /Quiet",
+  "parent_process": "C:\\Windows\\System32\\cmd.exe",
+  "source": "splunk",
+  "environment": "isolated-lab"
+}

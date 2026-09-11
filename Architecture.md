@@ -8,17 +8,16 @@ n8n coordinates OpenAI analysis, threat-intelligence enrichment, DFIR-IRIS ticke
 
 ## Architecture Diagram
 
-![SOC Automation 2.0 Architecture](screenshots/01-core-automation/SOC-Auto-2-Proj.png)
+![SOC Automation 2.0 Architecture](screenshots/01-core-automation/SOC-Automation-Project-Diagram.png)
 
-*Diagram file: `screenshots/01-core-automation/SOC-Auto-2-Proj.png`*
+*Diagram file: `screenshots/01-core-automation/SOC-Automation-Project-Diagram.png`*
 
 ## Components
 
 | Component | Role |
 |---|---|
 | Windows 10 | Lab endpoint that generates security activity and event logs |
-| Sysmon | Records detailed process, network, file, and registry telemetry |
-| Splunk Universal Forwarder | Sends Windows and Sysmon events to Splunk |
+| Splunk Universal Forwarder | Collects Windows Event Logs and forwards them to Splunk |
 | Splunk | Central SIEM used to index, search, and detect suspicious activity |
 | Splunk saved search/alert | Detection logic running inside Splunk that triggers the workflow |
 | n8n | Orchestrates alert intake, AI analysis, enrichment, ticketing, and notification |
@@ -32,9 +31,11 @@ n8n coordinates OpenAI analysis, threat-intelligence enrichment, DFIR-IRIS ticke
 
 ## Automated Alert-Triage Flow
 
-### 1. Endpoint telemetry collection
+### 1. Endpoint event collection
 
-Sysmon runs on the Windows 10 endpoint and records detailed endpoint activity. The Splunk Universal Forwarder sends the collected events to the Splunk server over TCP port `9997`.
+The Windows 10 endpoint generates Windows Security, System, and Application event logs. The Splunk Universal Forwarder collects the configured event-log channels and sends them to the Splunk server over TCP port `9997`.
+
+For this project, Windows Security Event ID `4625` provides the failed-logon telemetry used by the Splunk detection.
 
 ### 2. Splunk detection
 
@@ -86,7 +87,7 @@ Claude does not connect directly to Splunk, n8n, or OpenAI. The MCP server acts 
 
 | Source | Destination | Protocol/Port | Purpose |
 |---|---|---|---|
-| Windows Universal Forwarder | Splunk | TCP `9997` | Forward Windows and Sysmon events |
+| Windows Universal Forwarder | Splunk | TCP `9997` | Forward Windows Security Event Logs |
 | Splunk alert | n8n webhook | HTTP/HTTPS `5678` in the lab | Submit triggered alert data |
 | n8n | OpenAI API | HTTPS `443` | Request structured AI analysis |
 | n8n/OpenAI agent | VirusTotal API | HTTPS `443` | Threat-intelligence enrichment |
@@ -108,7 +109,7 @@ Claude does not connect directly to Splunk, n8n, or OpenAI. The MCP server acts 
 
 The project contains two connected but distinct paths:
 
-- **Automated workflow:** Windows/Sysmon → Splunk → n8n → OpenAI and enrichment → DFIR-IRIS/Slack
+- **Automated workflow:** Windows Security Event Logs → Splunk → → n8n → OpenAI and enrichment → DFIR-IRIS/Slack
 - **Analyst-assisted workflow:** Claude Desktop → Splunk MCP server → Splunk
 
 Both paths use the same Splunk environment. The automated path handles alert triage and routing, while the Claude path supports on-demand investigation and search.

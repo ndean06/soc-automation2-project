@@ -31,11 +31,11 @@ The Windows endpoint could communicate with the Splunk VM, but searches in Splun
 Network connectivity, port `9997`, and the forwarder service were working. However, `outputs.conf` contained the wrong destination:
 
 ```ini
-server = 192.168.117.163:9997
+server = 192.168.117.168:9997
 
 ### Root Cause
 
-The address `192.168.117.163` belonged to the Windows endpoint. The Universal Forwarder was incorrectly sending events back to the endpoint instead of the Splunk server at `192.168.117.164`.
+The address `192.168.117.168` belonged to the Windows endpoint. The Universal Forwarder was incorrectly sending events back to the endpoint instead of the Splunk server at `192.168.117.164`.
 
 ### Resolution
 
@@ -46,6 +46,6 @@ The destination entries in `outputs.conf` were corrected:
 defaultGroup = default-autolb-group
 
 [tcpout:default-autolb-group]
-server = 192.168.117.164:9997
+server = 192.168.117.169:9997
 
-[tcpout-server://192.168.117.164:9997]
+[tcpout-server://192.168.117.169:9997]

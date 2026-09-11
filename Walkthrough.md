@@ -14,9 +14,8 @@ The project was built in an isolated virtual lab using the following systems:
 
 | System | Primary Role |
 |---|---|
-| Windows 10 VM | Endpoint used to generate controlled security telemetry |
-| Sysmon | Detailed process, network, file, and registry logging |
-| Splunk Universal Forwarder | Sends Windows and Sysmon events to Splunk |
+| Windows 10 VM | Endpoint that generates Windows Security, Application, and System Event Logs |
+| Splunk Universal Forwarder | Collects configured Windows Event Logs and sends them to Splunk |
 | Splunk Enterprise VM | Log ingestion, search, detection, and alert generation |
 | n8n VM | Workflow orchestration and integration management |
 | OpenAI API | Structured alert analysis and triage-report generation |
@@ -29,14 +28,12 @@ The VMs communicated over a private lab network. Credentials, API keys, tokens, 
 
 <!-- Add the final architecture diagram or link here if desired. -->
 
-## 2. Windows Telemetry and Splunk Ingestion
+## 2. Windows Event Log and Splunk Ingestion
 
-Sysmon was installed on the Windows 10 endpoint to capture detailed endpoint activity. The Splunk Universal Forwarder collected the selected Windows Event Logs and transmitted them to the Splunk server.
-
-The forwarder was configured to use the Splunk receiving port:
+The Windows 10 endpoint generated Security, Application, System, and operational event logs. The Splunk Universal Forwarder collected the configured Windows Event Log channels and forwarded them to the Splunk Enterprise server over TCP port `9997`.
 
 ```text
-Windows 10 + Sysmon → Splunk Universal Forwarder → Splunk TCP 9997
+Windows Event Logs → Splunk Universal Forwarder → Splunk TCP 9997
 ```
 
 The following items were validated independently:
@@ -50,7 +47,7 @@ The following items were validated independently:
 
 The final Splunk search confirmed that events from the Windows endpoint were being indexed successfully.
 
-<!-- Screenshot: screenshots/01-core-automation/01-splunk-telemetry-ingestion.png -->
+<!-- Screenshot: screenshots/01-core-automation/01-windows-event-log-ingestion.png -->
 
 > A forwarding-destination issue was identified and corrected during setup. The root cause and resolution are documented in [Troubleshooting-Log.md](Troubleshooting-Log.md).
 

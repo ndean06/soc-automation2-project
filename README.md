@@ -6,7 +6,7 @@ An end-to-end SOC alert-triage automation lab integrating Splunk, n8n, OpenAI, S
 
 SOC analysts often spend valuable time collecting alert details, enriching indicators, documenting findings, and transferring information between separate tools. This project demonstrates how those repetitive steps can be automated while keeping the analyst responsible for validating the evidence and making the final escalation decision.
 
-The workflow begins with Windows 10 and Sysmon telemetry in Splunk. When Splunk detects suspicious activity, it sends an alert to an n8n webhook. The webhook passes the alert to an OpenAI agent, which uses VirusTotal and AbuseIPDB as enrichment tools during its analysis. The completed triage output is then sent to DFIR-IRIS for ticket creation and to Slack for analyst notification.
+The workflow begins with Windows 10 Security Event Logs in Splunk. When Splunk detects suspicious activity, it sends an alert to an n8n webhook. The webhook passes the alert to an OpenAI agent, which uses VirusTotal and AbuseIPDB as enrichment tools during its analysis. The completed triage output is then sent to DFIR-IRIS for ticket creation and to Slack for analyst notification.
 
 A separate Splunk MCP integration allows Claude Desktop to interact with the Splunk lab through approved tools. Claude can assist with analyst-driven searches and investigation pivots, but its results are validated against the original Splunk evidence.
 
@@ -120,7 +120,7 @@ See [Splunk-MCP-Claude.md](Splunk-MCP-Claude.md).
 
 | Category | Technologies |
 |---|---|
-| Endpoint telemetry | Windows 10, Sysmon, Windows Event Logs |
+| Endpoint telemetry | Windows 10, Windows Event Logs |
 | SIEM | Splunk Enterprise, Splunk Universal Forwarder |
 | Automation | n8n, webhooks, JSON, APIs |
 | AI analysis | OpenAI API |

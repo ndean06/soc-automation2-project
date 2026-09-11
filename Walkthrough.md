@@ -45,11 +45,21 @@ The following items were validated independently:
 - Active TCP connection from the endpoint to Splunk
 - Arrival of Windows and Sysmon events in Splunk
 
-The final Splunk search confirmed that events from the Windows endpoint were being indexed successfully.
+The results confirmed that Splunk received Security, Application, System, and Terminal Services events from the Windows 10 endpoint.
 
-<!-- Screenshot: screenshots/01-core-automation/01-windows-event-log-ingestion.png -->
+![Windows Event Log ingestion confirmed in Splunk](screenshots/01-core-automation/01-windows-event-log-ingestion.png)
 
-> A forwarding-destination issue was identified and corrected during setup. The root cause and resolution are documented in [Troubleshooting-Log.md](Troubleshooting-Log.md).
+> A forwarding-destination issue was identified and corrected during setup. 
+
+### Troubleshooting Note
+
+During initial validation, Windows Event Logs were not appearing in Splunk even though network connectivity, TCP port `9997`, and the Splunk Universal Forwarder service were working.
+
+The issue was traced to an incorrect destination in `outputs.conf`. The Universal Forwarder was sending events to the Windows endpoint instead of the Splunk server. After correcting the destination and restarting the forwarder, the connection became established and Windows events appeared in Splunk.
+
+See [Windows Events Not Appearing in Splunk](Troubleshooting-Log.md#1-windows-events-not-appearing-in-splunk) for the complete investigation, configuration correction, commands, and validation evidence.
+
+
 
 ## 3. Controlled Security Simulation
 

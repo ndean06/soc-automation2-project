@@ -61,23 +61,27 @@ See [Windows Events Not Appearing in Splunk](Troubleshooting-Log.md#1-windows-ev
 
 
 
-## 3. Controlled Security Simulation
+## 3. Controlled Failed-Logon Simulation
 
-Security telemetry was generated through an authorized Atomic Red Team simulation on the Windows 10 VM. Invoke-AtomicRedTeam and the Atomics test definitions were installed in the isolated lab, and the required test assets were staged.
+A controlled authentication test was performed against the Windows 10 endpoint by manually entering incorrect credentials multiple times. The activity was performed in the isolated lab to generate repeatable Windows failed-logon events for the automation workflow.
 
 ### Simulation Details
 
 | Field | Value |
 |---|---|
-| MITRE ATT&CK technique | `[Add verified technique ID and name]` |
-| Atomic test number | `[Add verified test number]` |
-| Test name | `[Add exact Atomic Red Team test name]` |
-| Execution time | `[Add date and time in UTC]` |
-| Detection source | `[Add Sysmon Event ID and/or Splunk detection name]` |
+| Test scenario | Repeated failed Windows logon attempts |
+| Target endpoint | `DESKTOP-ESM4I8F` |
+| Data source | Windows Security Event Log |
+| Event ID | `4625` — An account failed to log on |
+| Events observed | `8` |
+| MITRE ATT&CK mapping | `T1110 — Brute Force` |
+| Possible sub-technique | `T1110.001 — Password Guessing` |
 
-The simulation produced repeatable endpoint activity that could be detected in Splunk and submitted to the automation workflow.
+The repeated authentication failures produced Windows Security Event ID `4625`. Splunk received the events through the Universal Forwarder and made the associated timestamp, endpoint, username, and source IP available for detection and investigation.
 
-<!-- Screenshot: screenshots/01-core-automation/02-atomic-red-team-simulation.png -->
+Event ID `4625` does not automatically prove malicious activity. Failed logons can result from user mistakes, expired credentials, services using old passwords, or legitimate administrative activity. The number of attempts, timeframe, source, target account, and surrounding authentication activity must be considered before escalation.
+
+![Controlled failed-logon events in Splunk](screenshots/01-core-automation/02-windows-failed-logon-events.png)
 
 ## 4. Splunk Detection and Alert
 

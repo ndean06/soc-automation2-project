@@ -131,24 +131,40 @@ The detection was configured as a scheduled Splunk alert. When the query returne
 
 ## 5. n8n Workflow Orchestration
 
-n8n was deployed in Docker and used as the central workflow orchestrator. The workflow received the Splunk alert, prepared the data for analysis, invoked the AI agent and enrichment tools, and delivered the final output to DFIR-IRIS and Slack.
+n8n was deployed in Docker and used as the central workflow orchestrator. The workflow received the Splunk alert, prepared the data for analysis, invoked the OpenAI agent and applicable enrichment tools, and delivered the completed output to DFIR-IRIS and Slack.
 
 ### Core Workflow Nodes
 
 | Node | Function |
 |---|---|
 | Webhook | Receives the Splunk alert payload |
-| OpenAI agent | Analyzes the alert and produces the structured triage report |
-| VirusTotal enrichment | Retrieves supported hash, file, URL, or domain context |
-| AbuseIPDB enrichment | Retrieves IP-reputation and abuse-reporting context |
-| DFIR-IRIS HTTP request | Creates or updates the investigation case |
-| Slack message | Sends the analyst notification |
+| OpenAI agent | Analyzes the evidence and produces a structured triage report |
+| VirusTotal enrichment | Retrieves reputation data when supported indicators, such as hashes, are present |
+| AbuseIPDB enrichment | Retrieves reputation and abuse-reporting context for IP addresses |
+| DFIR-IRIS HTTP request | Creates an investigation case |
+| Slack message | Sends the completed analysis to the analyst |
 
-The workflow preserved the original alert evidence and passed only the required fields to external services.
+The workflow preserved the original alert evidence and passed only the fields required for analysis and enrichment to external services.
 
-<!-- Screenshot: screenshots/01-core-automation/05-n8n-core-workflow.png -->
+### Workflow Overview
 
-A sanitized workflow export should be stored in [`workflow-exports/`](workflow-exports/). Credential values, tokens, and webhook secrets must be removed before publishing.
+![n8n core workflow](screenshots/01-core-automation/05-n8n-core-workflow.png)
+
+*The n8n workflow coordinates alert ingestion, AI-assisted analysis, enrichment, case creation, and analyst notification.*
+
+### Webhook Reception
+
+The webhook node received the alert sent by Splunk. The payload contained the detection details needed for triage, including the endpoint, user, source IP, failed-logon count, and detection time.
+
+![n8n Splunk webhook payload](screenshots/01-core-automation/06-n8n-webhook-payload.png)
+
+*The successful n8n execution confirms that the Splunk alert reached the automation workflow.*
+
+> **Enrichment note:** The failed-logon scenario contained an IP address suitable for AbuseIPDB enrichment. VirusTotal remained available for alerts containing supported indicators such as file hashes.
+
+### Sanitized Workflow Export
+
+A sanitized copy of the n8n workflow is stored in [`workflow-exports/`](workflow-exports/). Credentials, API tokens, authentication headers, and private webhook URLs were removed before publication.
 
 ## 6. OpenAI Triage Agent
 

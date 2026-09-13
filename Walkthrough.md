@@ -223,24 +223,48 @@ The substituted address was not observed in the original Windows event. The enri
 
 See [Threat-Intelligence-Enrichment.md](Threat-Intelligence-Enrichment.md) for field mappings and sanitized request examples.
 
-## 8. DFIR-IRIS Case Creation
+## 8. DFIR-IRIS Alert Creation and Case Escalation
 
-After the AI triage report was returned, n8n sent the selected fields to DFIR-IRIS. The resulting case provided a central location for investigation tracking.
+After the AI triage report was returned, n8n submitted the selected fields to the DFIR-IRIS Alerts API. The successful API response confirmed that DFIR-IRIS created a new alert with Medium severity.
 
-The case included:
+### Alert Field Mapping
 
-- Alert and detection name
-- Severity and confidence
+| DFIR-IRIS Field | Workflow Value |
+|---|---|
+| Alert title | Splunk alert name |
+| Description | Complete AI-generated triage report |
+| Severity | Medium |
+| Status | Unspecified — awaiting analyst triage |
+| Customer | IrisInitialClient |
+
+The alert description included:
+
+- Detection name
 - Affected host and user
-- Evidence summary
+- Observed failed-logon activity
 - MITRE ATT&CK mapping
-- VirusTotal and AbuseIPDB context
+- AbuseIPDB and VirusTotal test-enrichment context
+- Severity assessment
 - Recommended investigation steps
-- Original event references
+- Evidence limitations
 
-<!-- Screenshot: screenshots/03-dfir-iris/01-dfir-iris-case-created.png -->
+### API Response
 
-See [DFIR-IRIS-Integration.md](DFIR-IRIS-Integration.md) for the API mapping and case-field details.
+![n8n DFIR-IRIS alert creation response](screenshots/03-dfir-iris/01-n8n-alert-creation-response.png)
+
+*The DFIR-IRIS API returned a successful response and created alert ID 10 with Medium severity.*
+
+### Created DFIR-IRIS Alert
+
+![DFIR-IRIS alert record](screenshots/03-dfir-iris/02-dfir-iris-alert-record.png)
+
+*DFIR-IRIS received the Splunk detection and AI-generated analysis as a structured alert awaiting analyst review.*
+
+The alert remained in the triage queue until an analyst reviewed the evidence. If further investigation were required, the analyst could escalate the alert into a new case or merge it into an existing case.
+
+This approach preserved human review while automating alert documentation and ticket creation.
+
+See [DFIR-IRIS-Integration.md](DFIR-IRIS-Integration.md) for the API mapping and alert-field details.
 
 ## 9. Slack Analyst Notification
 

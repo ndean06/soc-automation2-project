@@ -166,24 +166,30 @@ The webhook node received the alert sent by Splunk. The payload contained the de
 
 A sanitized copy of the n8n workflow is stored in [`workflow-exports/`](workflow-exports/). Credentials, API tokens, authentication headers, and private webhook URLs were removed before publication.
 
-## 6. OpenAI Triage Agent
+## 6. AI-Assisted Triage
 
-The OpenAI agent received the normalized alert context from n8n. The prompt required a structured response so the output could be used consistently by DFIR-IRIS and Slack.
+The OpenAI agent received the Splunk alert fields and produced a structured Tier 1 triage report. The response separated the original endpoint evidence from the controlled indicators used to validate the threat-intelligence integrations.
 
-### Required Triage Output
+### Triage Results
 
-- Executive alert summary
-- Observed evidence and affected assets
-- Severity and confidence assessment
-- MITRE ATT&CK mapping
-- Threat-intelligence enrichment results
-- Evidence gaps and limitations
-- Recommended investigation steps
-- Suggested containment or escalation actions
+| Category | Result |
+|---|---|
+| Observed activity | Five failed logons for `ndean` on `DESKTOP-ESM4I8F` |
+| Observed source | Private lab address |
+| Severity | Medium |
+| MITRE ATT&CK tactic | Credential Access |
+| MITRE ATT&CK technique | T1110.001 — Password Guessing |
+| Compromise status | Not confirmed |
+| Simulated IP priority | High if the substituted reputation belonged to the observed source |
+| VirusTotal result | Integration validated; hash not observed on the endpoint |
 
-The prompt instructed the model to distinguish observed evidence from analytical conclusions and to avoid inventing missing facts.
+The report recommended reviewing authentication logs for a subsequent successful login, validating the true source of the attempts, reviewing related network evidence, and applying containment only when supported by confirmed evidence.
 
-<!-- Screenshot: screenshots/01-core-automation/06-openai-triage-output.png -->
+![OpenAI structured triage output](screenshots/01-core-automation/07-openai-triage-output.png)
+
+*The OpenAI agent rated the observed failed-logon activity as Medium severity and separated it from the higher simulated priority produced through controlled threat-intelligence enrichment.*
+
+The AI-generated assessment was treated as decision support. Final severity, containment, and escalation decisions remained the responsibility of the analyst.
 
 ## 7. Threat-Intelligence Enrichment
 

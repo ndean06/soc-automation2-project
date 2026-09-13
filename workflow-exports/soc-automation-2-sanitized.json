@@ -1,0 +1,290 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Act as a Tier 1 SOC analyst system. When provided with a security alert or incident details (including indicators of compromise, logs, or metadata), perform the following steps: \n\nSummarize the alert – Provide a clear summary of what triggered the alert, which systems/users are affected, and the nature of the activity (e.g., suspicious login, malware detection, lateral movement). \n\nEnrich with threat intelligence – Correlate any \n\nIOCs (IP addresses, domains, hashes) with known threat intel sources. For any IP enrichment Use the tool named 'AbuseIPDB-Enrichment '. For any file Hash use the tool named 'VirusTotal-Hash' and use the URL: \n'https://www.virustotal.com/api/v3/files/{id}' but replace the '{id}' in the url with a actual file hash.\nHighlight if the indicators are associated with known malware or threat actors. \n\nAssess severity – Based on MITRE ATT&CK mapping, identify tactics/techniques, and provide an initial severity rating (Low, Medium, High, Critical). Recommend next actions – Suggest investigation steps and potential containment actions.\n\nFormat output clearly – Return findings in a structured format (Summary, IOC Enrichment, Severity Assessment, Recommended Actions)."
+            },
+            {
+              "content": "=Alert: {{ $json.body.search_name }}\nAlert Details: {{ JSON.stringify ($json.body.result,['_time','user','ComputerName'],2)}}\nSource IP: 85.165.104.58\nFile Hash: 186b26df63df3b7334043b47659cba4185c948629d857d47452cc1936f0aa5da"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "8974b52f-df01-418b-bf74-a1bf7258cbf1",
+      "name": "OpenAI AI Triage Agent",
+      "credentials": {
+        "openAiApi": {
+          "id": "",
+          "name": "OpenAi Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "YOUR_SLACK_CHANNEL"
+        },
+        "text": "={{ $json.output[0].content[0].text }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        0
+      ],
+      "id": "0c73ff79-bf2a-45c1-b09f-e48ec7ad0dde",
+      "name": "Slack Analyst Notification",
+      "webhookId": "",
+      "credentials": {
+        "slackApi": {
+          "id": "",
+          "name": "Slack Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "YOUR_PRIVATE_WEBHOOK_PATH",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f16b4fc4-4dbc-48c3-8f1c-fe8e228b5d60",
+      "name": "Splunk Alert Webhook",
+      "webhookId": ""
+    },
+    {
+      "parameters": {
+        "url": "https://api.abuseipdb.com/api/v2/check",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ipAddress",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', ``, 'string') }}"
+            },
+            {
+              "name": "maxAgeInDays",
+              "value": "1"
+            },
+            {
+              "name": "verbose"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Key",
+              "value": "YOUR_ABUSEIPDB_API_KEY"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        176,
+        240
+      ],
+      "id": "c8f6dc22-a1b2-418b-b4a6-559858066768",
+      "name": "AbuseIPDB IP Enrichment"
+    },
+    {
+      "parameters": {
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        544,
+        240
+      ],
+      "id": "c3d89564-180f-4df9-8ea9-6a544855c2a0",
+      "name": "VirusTotal Hash Enrichment (Optional)",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "",
+          "name": "VirusTotal Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "preBuiltAgentsCalloutHttpRequest": "",
+        "httpVariantWarning": "",
+        "curlImport": "",
+        "method": "POST",
+        "": "",
+        "url": "https://192.168.117.173/alerts/add",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "dfirIrisApi",
+        "provideSslCertificates": false,
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "alert_title",
+              "value": "={{ $('Splunk Alert Webhook').item.json.body.search_name }}"
+            },
+            {
+              "name": "alert_description",
+              "value": "={{ $json.output[0].content[0].text }}"
+            },
+            {
+              "name": "alert_severity_id",
+              "value": "3"
+            },
+            {
+              "name": "alert_status_id",
+              "value": "1"
+            },
+            {
+              "name": "alert_customer_id",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true
+        },
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        -176
+      ],
+      "id": "d899d2b1-55c2-4049-a983-fa68978ef9c7",
+      "name": "DFIR-IRIS Case Creation",
+      "extendsCredential": "dfirIrisApi",
+      "credentials": {
+        "dfirIrisApi": {
+          "id": "",
+          "name": "DFIR-IRIS account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+ },
+  "connections": {
+    "OpenAI AI Triage Agent": {
+      "main": [
+        [
+          {
+            "node": "Slack Analyst Notification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "DFIR-IRIS Case Creation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Analyst Notification": {
+      "main": [
+        []
+      ]
+    },
+    "Splunk Alert Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenAI AI Triage Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AbuseIPDB IP Enrichment": {
+      "ai_tool": [
+        [
+          {
+            "node": "OpenAI AI Triage Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal Hash Enrichment (Optional)": {
+      "ai_tool": [
+        [
+          {
+            "node": "OpenAI AI Triage Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ec64daa4-68d8-4381-96aa-499fe74f1764",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4fff8245ac932e830b2f7572cefeb2252813fce7ed1f9d328132693715834341"
+  },
+  "id": "gFyqKyQBkvxslnnI",
+  "tags": []
+}

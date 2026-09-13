@@ -268,18 +268,25 @@ See [DFIR-IRIS-Integration.md](DFIR-IRIS-Integration.md) for the API mapping and
 
 ## 9. Slack Analyst Notification
 
-n8n also sent a concise summary to Slack so the analyst could review the alert in real time. The Slack message contained enough information for initial prioritization while directing the analyst to the full DFIR-IRIS case and Splunk evidence.
+n8n sent the completed AI-assisted triage report to the dedicated Slack SOC channel. This allowed the analyst to review and prioritize the alert without immediately opening each connected platform.
 
 The notification included:
 
-- Alert name and severity
-- Affected endpoint
-- Short evidence summary
-- Enrichment highlights
-- Recommended next action
-- DFIR-IRIS case reference, when available
+- Splunk alert name
+- Affected endpoint and user
+- Observed failed-logon activity
+- Medium observed-alert severity
+- MITRE ATT&CK mapping
+- AbuseIPDB and VirusTotal enrichment results
+- Separation between observed evidence and controlled test indicators
+- Recommended investigation actions
+- Evidence limitations
 
-<!-- Screenshot: screenshots/01-core-automation/07-slack-analyst-notification.png -->
+![Slack analyst notification](screenshots/01-core-automation/08-slack-analyst-notification.png)
+
+*The n8n Slack integration delivered the completed AI-assisted triage report to the dedicated SOC alert channel.*
+
+The Slack message provided situational awareness but did not replace the original Splunk evidence or the DFIR-IRIS alert record. The analyst remained responsible for validating the findings and deciding whether escalation or containment was appropriate.
 
 ## 10. Claude Desktop and Splunk MCP
 

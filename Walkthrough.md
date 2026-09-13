@@ -195,11 +195,19 @@ The AI-generated assessment was treated as decision support. Final severity, con
 
 VirusTotal and AbuseIPDB were connected as enrichment tools available to the OpenAI agent through the n8n workflow.
 
-### VirusTotal
+### VirusTotal Hash Enrichment
 
-VirusTotal was used when the alert contained a supported hash, URL, domain, or other indicator. The response added reputation and detection context to the triage report.
+VirusTotal was configured as an optional enrichment tool for alerts containing supported file hashes. Because the failed-logon event did not contain a hash, a controlled SHA-256 value was supplied to validate the integration.
 
-<!-- Screenshot: screenshots/02-threat-intelligence/01-virustotal-enrichment.png -->
+At the time of testing, VirusTotal identified the file as `ManageEngine-OpManager.msi`. The analysis results showed `24` malicious detections, `35` undetected results, and `0` suspicious results. Additional metadata identified the sample as an MSI file with signing and revoked-certificate tags.
+
+![VirusTotal enrichment output](screenshots/02-threat-intelligence/02-virustotal-enrichment.png)
+
+*VirusTotal returned file metadata and antivirus analysis statistics for the controlled SHA-256 test indicator.*
+
+The hash was not observed on `DESKTOP-ESM4I8F` and was not connected to the failed-logon activity. The result only demonstrated how the workflow could enrich a hash when one is present in a future alert.
+
+Detailed configuration and sanitized request examples are available in [Threat-Intelligence-Enrichment.md](Threat-Intelligence-Enrichment.md).
 
 ### AbuseIPDB IP Enrichment
 

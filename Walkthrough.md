@@ -344,27 +344,29 @@ No Splunk data, saved searches, alerts, or configurations were modified during e
 
 ## 11. End-to-End Validation
 
-The completed workflow was validated from telemetry generation through analyst notification:
+The completed workflow was validated from the original Windows authentication events through analyst notification and investigation support.
 
-1. Controlled activity generated Windows and Sysmon events.
-2. The Universal Forwarder delivered the events to Splunk.
-3. The Splunk detection returned the expected matching event.
-4. Splunk triggered the n8n webhook.
-5. n8n submitted the alert to the OpenAI agent.
-6. VirusTotal and AbuseIPDB returned applicable enrichment.
-7. OpenAI produced the required structured triage report.
-8. n8n created the DFIR-IRIS case.
-9. n8n delivered the Slack notification.
-10. The analyst compared the automation output with the original Splunk evidence.
+| Validation Point | Expected Result | Actual Result | Status |
+|---|---|---|---|
+| Windows event ingestion | Splunk receives Windows Security events | Event ID `4625` was searchable in `mydfir-project` | Passed |
+| Splunk detection | Detect at least three failures within five minutes | Five failures were detected within approximately 16 seconds | Passed |
+| Splunk webhook | Send the alert payload to n8n | n8n received the alert name, host, user, source IP, and failure count | Passed |
+| AI triage | Generate a structured alert assessment | OpenAI returned a summary, ATT&CK mapping, severity, enrichment, and recommended actions | Passed |
+| AbuseIPDB | Enrich a supported public IP address | The controlled public IP returned reputation and abuse-reporting context | Passed |
+| VirusTotal | Enrich a supported SHA-256 hash | The controlled test hash returned file-reputation results | Passed |
+| DFIR-IRIS | Create an investigation alert | DFIR-IRIS created the alert with Medium severity and the AI-generated report | Passed |
+| Slack | Notify the analyst | The complete triage report was delivered to the project channel | Passed |
+| Splunk MCP | Support read-only analyst investigations | Claude retrieved and summarized failed-logon, PowerShell, and Defender events | Passed |
+| Human validation | Separate observations from simulated enrichment | The private source IP, public-IP substitution, test hash, and unconfirmed activity were clearly identified | Passed |
 
-Detailed expected results, actual results, and evidence references are maintained in [Testing-Validation.md](Testing-Validation.md).
+### Validation Outcome
 
-## Outcome
+The project successfully demonstrated an end-to-end SOC alert-triage pipeline:
 
-The project demonstrates how SIEM detection, workflow orchestration, threat intelligence, AI-assisted analysis, case management, and analyst notification can be combined into one repeatable SOC triage process.
-
-The automation reduces repetitive evidence-handling work while preserving human responsibility for validation, escalation, and response decisions.
-
+```text
+Windows Event Logs → Splunk detection → n8n webhook
+→ OpenAI analysis and enrichment → DFIR-IRIS alert
+→ Slack notification → Analyst validation
 ## Security and Publishing Notes
 
 - All activity was performed in an isolated and authorized lab.

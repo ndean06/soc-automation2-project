@@ -201,15 +201,19 @@ VirusTotal was used when the alert contained a supported hash, URL, domain, or o
 
 <!-- Screenshot: screenshots/02-threat-intelligence/01-virustotal-enrichment.png -->
 
-### AbuseIPDB
+### AbuseIPDB IP Enrichment
 
-AbuseIPDB was used when the alert contained an IP address. The response added confidence, reporting, and reputation context to the analysis.
+AbuseIPDB was configured to enrich public IP addresses associated with security alerts. The original failed-logon event contained the private lab address `192.168.117.1`, which could not provide meaningful public reputation information.
 
-<!-- Screenshot: screenshots/02-threat-intelligence/02-abuseipdb-enrichment.png -->
+To validate the integration, `85.165.104.58` was supplied as a controlled public-IP substitute. At the time of testing, AbuseIPDB returned an abuse confidence score of `100`, with `49` reports from `35` distinct users. The response also included country, ISP, domain, and usage-type information.
 
-Enrichment did not replace the original Splunk evidence. It was treated as supporting context and remained subject to analyst validation.
+![AbuseIPDB enrichment output](screenshots/02-threat-intelligence/01-abuseipdb-enrichment.png)
 
-See [Threat-Intelligence-Enrichment.md](Threat-Intelligence-Enrichment.md) for the field mappings and sanitized request examples.
+*AbuseIPDB returned reputation context for the controlled public IP used to simulate production enrichment.*
+
+The substituted address was not observed in the original Windows event. The enrichment was treated as supporting context and did not replace the original Splunk evidence or prove account compromise. In a real alert containing a public source IP, the workflow would submit the observed address directly to AbuseIPDB.
+
+See [Threat-Intelligence-Enrichment.md](Threat-Intelligence-Enrichment.md) for field mappings and sanitized request examples.
 
 ## 8. DFIR-IRIS Case Creation
 

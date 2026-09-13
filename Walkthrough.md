@@ -119,7 +119,7 @@ The controlled test generated five failed logons for user `ndean` on `DESKTOP-ES
 
 ![Splunk repeated failed-logon detection](screenshots/01-core-automation/03-splunk-failed-logon-detection.png)
 
-*Splunk detected five failed Windows logons from `192.168.117.1` within the same five-minute window.*
+*Splunk grouped Windows Security Event ID 4625 records into five-minute intervals and detected five failed logons associated with `ndean` on `DESKTOP-ESM4I8F`.*
 
 ### Saved Alert Configuration
 

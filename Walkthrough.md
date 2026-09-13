@@ -85,28 +85,49 @@ Event ID `4625` does not automatically prove malicious activity. Failed logons c
 
 ## 4. Splunk Detection and Alert
 
-Splunk searched the incoming endpoint telemetry for the controlled activity. The detection logic was reviewed to confirm that the returned event matched the expected host, user, process, and timestamp.
+Splunk searched the Windows Security logs for repeated failed authentication attempts. Windows Security Event ID `4625` represents an unsuccessful logon.
+
+The detection grouped the events into five-minute intervals and returned a result when at least three failures were associated with the same endpoint and user.
 
 ### Detection Details
 
 | Field | Value |
 |---|---|
-| Detection name | `[Add exact Splunk alert name]` |
-| Index | `[Add index]` |
-| Sourcetype | `[Add sourcetype]` |
+| Detection name | `Test-Brute-Force` |
+| Index | `mydfir-project` |
+| Source | `WinEventLog:Security` |
+| Sourcetype | `WinEventLog` |
+| Windows Event ID | `4625` |
+| Detection threshold | Three or more failures within five minutes |
+| Alert type | Scheduled cron search |
 | Trigger condition | Number of results greater than `0` |
-| Alert action | Send webhook request to n8n |
+| Alert actions | Add to Triggered Alerts and send webhook to n8n |
 
-Add the final sanitized SPL query here after verifying it against the saved Splunk detection:
+### Detection Query
 
 ```spl
-[Add final detection query]
+index="mydfir-project" EventCode=4625
+| bin _time span=5m
+| stats count AS failed_attempts values(src_ip) AS source_ips
+    by _time ComputerName user
+| where failed_attempts >= 3
 ```
 
-The saved search was configured as an alert. When matching results were returned, Splunk sent the selected alert fields to the n8n webhook.
+### Detection Results
 
-<!-- Screenshot: screenshots/01-core-automation/03-splunk-detection-results.png -->
-<!-- Screenshot: screenshots/01-core-automation/04-splunk-alert-configuration.png -->
+The controlled test generated five failed logons for user `ndean` on `DESKTOP-ESM4I8F`. Splunk grouped the events into one five-minute detection window.
+
+![Splunk repeated failed-logon detection](screenshots/01-core-automation/03-splunk-failed-logon-detection.png)
+
+*Splunk detected five failed Windows logons from `192.168.117.1` within the same five-minute window.*
+
+### Saved Alert Configuration
+
+The detection was configured as a scheduled Splunk alert. When the query returned a result, Splunk triggered its configured actions, including the webhook request to n8n.
+
+![Splunk alert configuration](screenshots/01-core-automation/04-splunk-alert-configuration.png)
+
+*The enabled Splunk alert and trigger history confirm that the detection executed and the webhook action was configured.*
 
 ## 5. n8n Workflow Orchestration
 

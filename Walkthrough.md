@@ -333,7 +333,7 @@ The literal technique identifier `T1059.001` did not appear in the indexed event
 
 Mimikatz was detected and quarantined during the download process. Therefore, the evidence does not support claiming that Mimikatz executed or accessed LSASS memory.
 
-![Claude PowerShell and Mimikatz investigation](screenshots/04-splunk-mcp-claude/03-claude-atomic-red-team-query.png)
+![Claude PowerShell and Mimikatz investigation](screenshots/04-splunk-mpc-claude/03-claude-atomic-red-team-query.png)
 
 ### Analyst Validation
 

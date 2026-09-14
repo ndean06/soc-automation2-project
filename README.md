@@ -10,6 +10,23 @@ The workflow begins with Windows 10 Security Event Logs in Splunk. When Splunk d
 
 A separate Splunk MCP integration allows Claude Desktop to interact with the Splunk lab through approved tools. Claude can assist with analyst-driven searches and investigation pivots, but its results are validated against the original Splunk evidence.
 
+### What the AI Does
+
+The OpenAI agent receives selected fields from the Splunk alert rather than the complete raw event. It uses those details to:
+
+- Summarize the detected activity.
+- Identify the affected user and endpoint.
+- Request supported VirusTotal and AbuseIPDB enrichment.
+- Map observed behavior to relevant MITRE ATT&CK techniques.
+- Assign an initial severity and confidence assessment.
+- Recommend investigation and response actions.
+- Generate a structured report for DFIR-IRIS and Slack.
+
+The AI does not modify Splunk data, automatically contain endpoints, block IP addresses, or make the final incident decision.
+
+A separate Claude Desktop integration uses a local Splunk MCP server to support analyst-driven, read-only searches. Claude helps organize returned events and identify investigation pivots, but Splunk remains the source of truth.
+
+
 ## Objective
 
 Build an end-to-end proof-of-concept pipeline that demonstrates how a modern Security Operations Center can:
@@ -56,21 +73,36 @@ See [Architecture.md](Architecture.md) for detailed component roles, communicati
 
 ## Demonstration Scenario
 
-Security telemetry for this project was generated through a controlled Atomic Red Team simulation on the Windows 10 VM. The lab was prepared by installing the Invoke-AtomicRedTeam execution framework and the Atomics test definitions. Mimikatz test assets were staged to support the authorized credential-access simulation.
+This project used a controlled, multi-stage simulation on the Windows 10 endpoint. The activity was intentionally generated to test both automated alert triage and analyst-driven investigation.
 
-### Simulation Details
+### Phase 1 — Failed-Logon Simulation
 
-- **Atomic Red Team technique:** `[Technique ID — Technique Name]`
-- **Atomic test number:** `[Test Number]`
-- **Detection source:** `[Sysmon Event ID or Splunk detection name]`
+Five incorrect Windows credentials were manually entered within approximately 16 seconds. This generated Windows Security Event ID `4625` events for user `ndean` on `DESKTOP-ESM4I8F`.
 
-The project validates the complete path from endpoint telemetry through analyst notification:
+The Splunk detection identified the rapid failed-logon pattern and triggered the automated workflow:
 
 ```text
-Sysmon event → Splunk detection → n8n webhook → OpenAI agent
-→ VirusTotal and AbuseIPDB tool calls → structured triage
-→ DFIR-IRIS ticket and Slack notification → analyst validation
+Windows Event ID 4625 → Splunk detection → n8n webhook
+→ OpenAI triage and threat-intelligence enrichment
+→ DFIR-IRIS alert and Slack notification → Analyst validation
 ```
+### Phase 2 — PowerShell and Atomic Red Team Activity
+
+Additional activity was then generated using the Invoke-AtomicRedTeam framework to simulate PowerShell-based execution associated with MITRE ATT&CK `T1059.001 — PowerShell`.
+
+Mimikatz test assets were also downloaded as part of the authorized exercise. Microsoft Defender detected the download and successfully quarantined it, generating Event IDs `1116` and `1117`.
+
+Claude Desktop used the Splunk MCP server to perform read-only searches of this additional telemetry. The results confirmed:
+
+- PowerShell module logging through Event ID `4103`.
+- PowerShell script-block logging through Event ID `4104`.
+- Invoke-AtomicRedTeam framework and module activity.
+- Mimikatz detection through Defender Event ID `1116`.
+- Successful quarantine through Defender Event ID `1117`.
+
+The observed PowerShell activity supported the mapping to `T1059.001`. However, the returned evidence did not independently confirm the exact Atomic test command.
+
+The available evidence also did not confirm that Mimikatz executed, accessed LSASS memory, dumped credentials, or compromised the endpoint. Therefore, the Mimikatz download was documented as a detected and quarantined test asset rather than successful credential-dumping activity.
 
 ## Key Features
 
@@ -150,7 +182,7 @@ No numerical time-saving claim is made because a formal before-and-after perform
 | Splunk MCP and Claude | [`screenshots/04-splunk-mcp-claude/`](screenshots/04-splunk-mcp-claude/) |
 
 
-## Security Considerations
+## Security and Sensitive-Data Handling
 
 - The project was built in an isolated and authorized lab environment.
 - API keys, passwords, tokens, active webhook URLs, and unrestricted configuration files are not committed.
@@ -166,6 +198,8 @@ No numerical time-saving claim is made because a formal before-and-after perform
 - Structured input and output reduce inconsistent AI responses and make downstream processing easier.
 - Error branches and duplicate-event handling are as important as the successful workflow path.
 - AI provides the most value when it organizes evidence and recommends pivots without being treated as the source of truth.
+
+## Future Improvements
 
 ## Disclaimer
 

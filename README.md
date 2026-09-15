@@ -1,12 +1,12 @@
 # SOC Automation 2.0
 
-An end-to-end SOC alert-triage automation lab integrating Splunk, n8n, OpenAI, Slack, VirusTotal, DFIR-IRIS, and Claude Desktop through the Model Context Protocol (MCP).
+An end-to-end SOC alert-triage automation lab integrating Splunk, n8n, OpenAI, Slack, VirusTotal, AbuseIPDB, DFIR-IRIS, and Claude Desktop through the Model Context Protocol (MCP).
 
 ## Project Summary
 
 SOC analysts often spend valuable time collecting alert details, enriching indicators, documenting findings, and transferring information between separate tools. This project demonstrates how those repetitive steps can be automated while keeping the analyst responsible for validating the evidence and making the final escalation decision.
 
-The workflow begins with Windows 10 Security Event Logs in Splunk. When Splunk detects suspicious activity, it sends an alert to an n8n webhook. The webhook passes the alert to an OpenAI agent, which uses VirusTotal and AbuseIPDB as enrichment tools during its analysis. The completed triage output is then sent to DFIR-IRIS for ticket creation and to Slack for analyst notification.
+The workflow begins with Windows 10 Security Event Logs in Splunk. When Splunk detects suspicious activity, it sends an alert to an n8n webhook. The webhook passes the alert to an OpenAI agent, which uses VirusTotal and AbuseIPDB as enrichment tools during its analysis. The completed triage output is then sent to DFIR-IRIS for alert creation and to Slack for analyst notification.
 
 A separate Splunk MCP integration allows Claude Desktop to interact with the Splunk lab through approved tools. Claude can assist with analyst-driven searches and investigation pivots, but its results are validated against the original Splunk evidence.
 
@@ -17,15 +17,14 @@ The OpenAI agent receives selected fields from the Splunk alert rather than the 
 - Summarize the detected activity.
 - Identify the affected user and endpoint.
 - Request supported VirusTotal and AbuseIPDB enrichment.
-- Map observed behavior to relevant MITRE ATT&CK techniques.
-- Assign an initial severity and confidence assessment.
+- Suggest relevant MITRE ATT&CK mappings for analyst validation.
+- Assign an initial severity and explain the supporting rationale.
 - Recommend investigation and response actions.
 - Generate a structured report for DFIR-IRIS and Slack.
 
 The AI does not modify Splunk data, automatically contain endpoints, block IP addresses, or make the final incident decision.
 
 A separate Claude Desktop integration uses a local Splunk MCP server to support analyst-driven, read-only searches. Claude helps organize returned events and identify investigation pivots, but Splunk remains the source of truth.
-
 
 ## Objective
 
@@ -34,7 +33,7 @@ Build an end-to-end proof-of-concept pipeline that demonstrates how a modern Sec
 1. Reduce repetitive alert-enrichment and documentation work.
 2. Produce consistent and structured triage reports.
 3. Improve situational awareness through MITRE ATT&CK mapping.
-4. Create investigation cases and analyst notifications automatically.
+4. Create investigation alerts and analyst notifications automatically.
 5. Use AI as decision support while preserving human review.
 
 ## Architecture
@@ -50,7 +49,7 @@ See [Architecture.md](Architecture.md) for detailed component roles, communicati
 | [Architecture.md](Architecture.md) | Component roles, communication paths, and trust boundaries |
 | [Walkthrough.md](Walkthrough.md) | Complete implementation and evidence walkthrough |
 | [Threat-Intelligence-Enrichment.md](Threat-Intelligence-Enrichment.md) | VirusTotal and AbuseIPDB integration details |
-| [DFIR-IRIS-Integration.md](DFIR-IRIS-Integration.md) | Automated case-creation details |
+| [DFIR-IRIS-Integration.md](DFIR-IRIS-Integration.md) | Automated alert-creation and case-escalation details |
 | [Splunk-MCP-Claude.md](Splunk-MCP-Claude.md) | Claude-to-Splunk MCP integration |
 | [Testing-Validation.md](Testing-Validation.md) | Expected results, actual results, and validation status |
 | [Troubleshooting-Log.md](Troubleshooting-Log.md) | Problems, root causes, corrections, and lessons |
@@ -61,13 +60,13 @@ See [Architecture.md](Architecture.md) for detailed component roles, communicati
 
 | Stage | Component | Function |
 |---:|---|---|
-| 1 | Windows 10 and Sysmon | Generate endpoint process, network, file, and registry telemetry |
+| 1 | Windows 10 Security Event Logs | Generate authentication, PowerShell, and Defender telemetry |
 | 2 | Splunk Enterprise | Ingest telemetry and detect suspicious behavior |
 | 3 | Splunk alert action | Send the alert payload to the n8n webhook |
 | 4 | n8n | Pass the alert to the OpenAI agent and manage the workflow |
 | 5 | VirusTotal and AbuseIPDB | Return hash and IP reputation context when called by the agent |
 | 6 | OpenAI agent | Combine the alert evidence and enrichment into a structured triage report |
-| 7 | DFIR-IRIS | Create an investigation ticket containing the completed analysis |
+| 7 | DFIR-IRIS | Create an investigation alert containing the completed analysis |
 | 8 | Slack | Deliver the completed analysis to the analyst |
 | 9 | Human analyst | Validate the findings and make the final decision |
 
@@ -86,6 +85,9 @@ Windows Event ID 4625 → Splunk detection → n8n webhook
 → OpenAI triage and threat-intelligence enrichment
 → DFIR-IRIS alert and Slack notification → Analyst validation
 ```
+
+This phase simulated password-guessing behavior associated with MITRE ATT&CK `T1110.001 — Password Guessing`. Because the failed logons were manually generated from a familiar internal source and no successful unauthorized login was observed, the activity was not treated as a confirmed hostile attack.
+
 ### Phase 2 — PowerShell and Atomic Red Team Activity
 
 Additional activity was then generated using the Invoke-AtomicRedTeam framework to simulate PowerShell-based execution associated with MITRE ATT&CK `T1059.001 — PowerShell`.
@@ -108,9 +110,9 @@ The available evidence also did not confirm that Mimikatz executed, accessed LSA
 
 ### Splunk Detection
 
-- Ingested Windows 10 and Sysmon telemetry through the Splunk Universal Forwarder.
-- Created detection logic for the controlled Atomic Red Team activity.
-- Configured Splunk to trigger the automation workflow when the search returned a matching event.
+- Ingested Windows Security, PowerShell, and Defender events through the Splunk Universal Forwarder.
+- Created detection logic for the controlled Event ID `4625` failed-logon activity.
+- Configured Splunk to trigger the automation workflow when the search returned at least three failures within five minutes.
 
 ### n8n Orchestration
 
@@ -125,20 +127,22 @@ The available evidence also did not confirm that Mimikatz executed, accessed LSA
 - Used OpenAI to generate a structured triage report.
 - Allowed the OpenAI agent to request VirusTotal and AbuseIPDB enrichment when supported indicators were present.
 - Separated observed facts from analytical assessment.
-- Included severity, confidence, MITRE ATT&CK mapping, evidence gaps, and recommended next steps.
+- Included severity, MITRE ATT&CK mapping, evidence limitations, and recommended next steps.
 - Kept the final escalation decision under human control.
 
 ## Bonus Integrations
 
 ### Threat-Intelligence Enrichment
 
-The OpenAI agent uses VirusTotal for supported hash or indicator reputation and AbuseIPDB for IP-address reputation. The returned context becomes part of the agent's analysis without replacing the original alert evidence.
+The original failed-logon alert contained a private lab source IP and no observed file hash. To validate the enrichment integrations, a controlled public IP was submitted to AbuseIPDB and a test SHA-256 hash was submitted to VirusTotal.
+
+These indicators were labeled as simulated enrichment inputs. They provided supporting context for integration testing but were not treated as evidence observed in the original authentication alert and did not determine its final severity.
 
 See [Threat-Intelligence-Enrichment.md](Threat-Intelligence-Enrichment.md).
 
-### DFIR-IRIS Case Management
+### DFIR-IRIS Alert Management
 
-The workflow creates a structured investigation case containing the alert summary, severity, host, user, MITRE ATT&CK mapping, enrichment, evidence, and recommended investigation steps.
+The workflow creates a structured investigation alert containing the alert summary, severity, host, user, MITRE ATT&CK mapping, enrichment context, evidence, and recommended investigation steps. An analyst can review the alert and escalate it into a case when additional investigation is required.
 
 See [DFIR-IRIS-Integration.md](DFIR-IRIS-Integration.md).
 
@@ -157,7 +161,7 @@ See [Splunk-MCP-Claude.md](Splunk-MCP-Claude.md).
 | Automation | n8n, webhooks, JSON, APIs |
 | AI analysis | OpenAI API |
 | Threat intelligence | VirusTotal, AbuseIPDB |
-| Case management | DFIR-IRIS |
+| Alert and case management | DFIR-IRIS |
 | Notification | Slack |
 | Analyst assistance | Claude Desktop, Model Context Protocol, Splunk MCP |
 | Infrastructure | Ubuntu, Docker, Windows PowerShell |
@@ -165,7 +169,7 @@ See [Splunk-MCP-Claude.md](Splunk-MCP-Claude.md).
 ## Project Results
 
 - Built and validated an end-to-end alert-triage workflow in an isolated lab.
-- Connected endpoint detection, orchestration, enrichment, AI analysis, case management, and analyst notification.
+- Connected endpoint detection, orchestration, enrichment, AI analysis, alert management, and analyst notification.
 - Produced consistent triage output from a repeatable alert payload.
 - Added failure testing and troubleshooting documentation for key integrations.
 - Demonstrated how AI can assist investigation without replacing evidence validation or analyst judgment.
@@ -178,18 +182,18 @@ No numerical time-saving claim is made because a formal before-and-after perform
 |---|---|
 | Core Splunk-to-Slack workflow | [`screenshots/01-core-automation/`](screenshots/01-core-automation/) |
 | VirusTotal and AbuseIPDB enrichment | [`screenshots/02-threat-intelligence/`](screenshots/02-threat-intelligence/) |
-| DFIR-IRIS case creation | [`screenshots/03-dfir-iris/`](screenshots/03-dfir-iris/) |
+| DFIR-IRIS alert creation | [`screenshots/03-dfir-iris/`](screenshots/03-dfir-iris/) |
 | Splunk MCP and Claude | [`screenshots/04-splunk-mcp-claude/`](screenshots/04-splunk-mcp-claude/) |
 
 
 ## Security and Sensitive-Data Handling
 
-- The project was built in an isolated and authorized lab environment.
-- API keys, passwords, tokens, active webhook URLs, and unrestricted configuration files are not committed.
-- Public configuration examples contain placeholders only.
-- Only the alert fields required for analysis are sent to external services.
-- AI-generated findings are treated as analytical leads until confirmed in the source telemetry.
-- Automated containment actions require testing and human approval before use.
+- The project used authorized lab data and did not contain production or customer information.
+- API keys, passwords, credential identifiers, authentication headers, and private webhook URLs were removed from the published files.
+- Live credentials remained in excluded local n8n and Claude Desktop configuration files.
+- Only necessary alert fields were sent externally, and simulated enrichment indicators were clearly labeled.
+- Screenshots were reviewed for sensitive information before publication.
+- Disabled certificate verification was limited to the isolated lab; production use would require trusted TLS certificates.
 
 ## Lessons Learned
 
@@ -200,6 +204,16 @@ No numerical time-saving claim is made because a formal before-and-after perform
 - AI provides the most value when it organizes evidence and recommends pivots without being treated as the source of truth.
 
 ## Future Improvements
+
+- Automatically distinguish public IP addresses from private or reserved addresses before enrichment.
+- Submit hashes to VirusTotal only when they are present in the original alert.
+- Require structured JSON output from the AI agent.
+- Dynamically map AI severity to the correct DFIR-IRIS severity ID.
+- Add authenticated or signed webhook requests.
+- Add retries, timeout handling, failure notifications, and duplicate-alert prevention.
+- Escalate DFIR-IRIS alerts into cases only after analyst review.
+- Use trusted TLS certificates and least-privilege service accounts.
+- Measure manual versus automated triage time and report consistency.
 
 ## Disclaimer
 

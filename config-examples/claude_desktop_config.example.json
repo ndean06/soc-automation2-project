@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "splunk": {
+      "command": "C:\\PATH\\TO\\uv.exe",
+      "args": [
+        "--directory",
+        "C:\\PATH\\TO\\splunk-mcp",
+        "run",
+        "python",
+        "splunk_mcp.py",
+        "stdio"
+      ],
+      "env": {
+        "SPLUNK_HOST": "YOUR_SPLUNK_HOST_OR_IP",
+        "SPLUNK_PORT": "8089",
+        "SPLUNK_USERNAME": "SPLUNK_READ_ONLY_USERNAME",
+        "SPLUNK_PASSWORD": "SPLUNK_READ_ONLY_PASSWORD",
+        "SPLUNK_SCHEME": "https",
+        "VERIFY_SSL": "false"
+      }
+    }
+  }
+}
+

@@ -38,7 +38,7 @@ Build an end-to-end proof-of-concept pipeline that demonstrates how a modern Sec
 
 ## Architecture
 
-![SOC Automation 2.0 Architecture](screenshots/01-core-automation/SOC-Auto-2-Proj.png)
+![SOC Automation 2.0 Architecture](screenshots/01-core-automation/SOC-Automation-Project-Diagram.png)
 
 See [Architecture.md](Architecture.md) for detailed component roles, communication paths, ports, and security considerations.
 

@@ -8,7 +8,7 @@ SOC analysts often spend valuable time collecting alert details, enriching indic
 
 The workflow begins with Windows 10 Security Event Logs in Splunk. When Splunk detects suspicious activity, it sends an alert to an n8n webhook. The webhook passes the alert to an OpenAI agent, which uses VirusTotal and AbuseIPDB as enrichment tools during its analysis. The completed triage output is then sent to DFIR-IRIS for alert creation and to Slack for analyst notification.
 
-A separate Splunk MCP integration allows Claude Desktop to interact with the Splunk lab through approved tools. Claude can assist with analyst-driven searches and investigation pivots, but its results are validated against the original Splunk evidence.
+A separate Splunk MCP integration allows Claude Desktop to interact with the Splunk SIEM through approved tools. Claude can assist with analyst-driven searches and investigation pivots, but its results are validated against the original Splunk evidence.
 
 ### What the AI Does
 
